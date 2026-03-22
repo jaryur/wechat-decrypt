@@ -2,5 +2,9 @@
     "db_dir": "D:\\xwechat_files\\your_wxid\\db_storage",
     "keys_file": "all_keys.json",
     "decrypted_dir": "decrypted",
-    "wechat_process": "Weixin.exe"
+    "wechat_process": "Weixin.exe",
+
+    "cache_dir": "C:\\Users\\你的用户名\\Documents\\xwechat_files\\your_wxid\\cache",
+    "moments_export_dir": "~/moments_export_full",
+    "image_aes_key": ""
 }

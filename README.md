@@ -159,6 +159,77 @@ python find_image_key.py
 
 > **注意**: AES 密钥仅在微信查看图片时临时加载到内存中。如果扫描未找到密钥，请先在微信中查看几张图片，然后立即重新运行脚本。
 
+## 7. 朋友圈图片备份与画廊
+
+将所有朋友圈缓存图片解密后，生成按月份分组的离线 HTML 画廊，永久本地可访问。
+
+### 配置
+
+在 `config.json` 中补充以下字段（参见 `config.example.json`）：
+
+```json
+{
+    "cache_dir": "C:\\Users\\你的用户名\\Documents\\xwechat_files\\your_wxid\\cache",
+    "moments_export_dir": "~/moments_export_full",
+    "image_aes_key": ""
+}
+```
+
+- `cache_dir`：微信缓存目录，包含 `YYYY-MM/Sns/Img/` 子目录
+- `moments_export_dir`：解密图片和 HTML 的输出目录
+- `image_aes_key`：V2 格式图片的 AES 密钥（16 字节 hex），由步骤 6 自动填入
+
+### 步骤
+
+**第一步：提取图片 AES 密钥**（参见步骤 6）
+
+```bash
+python find_image_key_monitor.py
+```
+
+密钥自动写入 `config.json` 的 `image_aes_key` 字段。
+
+**第二步：解密所有缓存图片**
+
+```bash
+python cache_monitor.py
+```
+
+扫描 `cache_dir` 下所有 `Sns/Img/` 中的 .dat 文件，解密后保存到 `moments_export_dir/images/`。同时生成 `image_index.jsonl` 记录每张图片对应的月份。
+
+首次运行会处理全量缓存（可能数万张）；之后持续监控新图片。
+
+**第三步：生成画廊 HTML**
+
+```bash
+python export_gallery.py
+```
+
+输出 `moments_export_dir/gallery.html`，用浏览器打开即可浏览。
+
+```bash
+# 可选参数
+python export_gallery.py --images ~/my_images --output ~/Desktop/gallery.html
+```
+
+### 效果
+
+- 所有图片按月份分组，按年月导航
+- 图片为本地文件，离线永久有效（无 CDN 过期问题）
+- 支持 44,000+ 张图片，分页懒加载
+
+### 朋友圈时间线导出（可选）
+
+导出朋友圈文字 + 评论 + 点赞的时间线（图片链接为 CDN，有效期有限）：
+
+```bash
+# 先将解密的 sns.db 复制到 decrypted/sns/ 目录下
+python export_moments.py        # 纯文字时间线
+python export_moments_full.py   # 含月份图库的完整时间线
+```
+
+---
+
 ## 文件说明
 
 | 文件 | 说明 |
@@ -172,6 +243,10 @@ python find_image_key.py
 | `decode_image.py` | 图片 .dat 文件解密模块 (XOR / V1 / V2) |
 | `find_image_key.py` | 从微信进程内存提取图片 AES 密钥 |
 | `find_image_key_monitor.py` | 持续监控版密钥提取（推荐） |
+| `cache_monitor.py` | 朋友圈图片守护进程，自动解密缓存图片 |
+| `export_gallery.py` | 生成离线图片画廊 HTML（按月份） |
+| `export_moments.py` | 导出朋友圈时间线 HTML |
+| `export_moments_full.py` | 导出含月份图库的完整朋友圈时间线 |
 | `latency_test.py` | 延迟测量诊断工具 |
 
 ## 技术细节

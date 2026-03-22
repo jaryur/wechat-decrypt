@@ -1,6 +1,7 @@
 # Decrypted databases and keys - NEVER upload
 all_keys.json
 wechat_key.txt
+image_aes_key.txt
 config.json
 decrypted/
 decoded_images/
