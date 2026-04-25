@@ -2,6 +2,8 @@
 
 微信 4.0 (Windows) 本地数据库解密工具。从运行中的微信进程内存提取加密密钥，解密所有 SQLCipher 4 加密数据库，并提供实时消息监听。
 
+> **已验证版本**: WeChat 4.0.6。后续版本如有变更可能需要调整。
+
 ## 更新日志
 
 ### 2025-03-03 — 富媒体内容 & 组合消息修复
@@ -29,7 +31,7 @@ WCDB (微信的 SQLCipher 封装) 会在进程内存中缓存派生后的 raw ke
 
 - Windows 10/11
 - Python 3.10+
-- 微信 4.0 (正在运行)
+- 微信 4.0 / 4.0.6+ (正在运行)
 - 需要管理员权限 (读取进程内存)
 
 ### 安装依赖
@@ -220,12 +222,26 @@ python export_gallery.py --images ~/my_images --output ~/Desktop/gallery.html
 
 ### 朋友圈时间线导出（可选）
 
-导出朋友圈文字 + 评论 + 点赞的时间线（图片链接为 CDN，有效期有限）：
+导出朋友圈文字 + 评论 + 点赞的时间线：
 
 ```bash
 # 先将解密的 sns.db 复制到 decrypted/sns/ 目录下
 python export_moments.py        # 纯文字时间线
-python export_moments_full.py   # 含月份图库的完整时间线
+python export_moments_full.py   # 每人一个独立 HTML + 本地图片 + 视频
+```
+
+`export_moments_full.py` 新特性：
+- **按用户分文件导出**：每个好友独立一个 HTML，同时生成总览导航页
+- **本地图片优先显示**：当 md5 精确匹配失败时，自动从该用户、该月份的本地缓存图片池中取图替代 CDN 链接，解决微信 4.0 CDN 过期问题
+- **视频识别修复**：正确识别朋友圈视频（`media.type == '6'` + `ContentObject.type == '15'`），用 `<video>` 标签嵌入播放
+- **底部月份画廊**：每个用户页面底部附加相关月份的本地缓存图片折叠画廊
+
+```bash
+# 只导出指定用户
+python export_moments_full.py --user wxid_xxx
+
+# 同时生成合并版
+python export_moments_full.py --merged
 ```
 
 ---
@@ -244,9 +260,11 @@ python export_moments_full.py   # 含月份图库的完整时间线
 | `find_image_key.py` | 从微信进程内存提取图片 AES 密钥 |
 | `find_image_key_monitor.py` | 持续监控版密钥提取（推荐） |
 | `cache_monitor.py` | 朋友圈图片守护进程，自动解密缓存图片 |
+| `decrypt_sns_images.py` | 批量解密朋友圈 V2 格式图片缓存（一次性全量解密） |
+| `test_sns_decrypt.py` | 测试单张朋友圈图片解密 |
 | `export_gallery.py` | 生成离线图片画廊 HTML（按月份） |
 | `export_moments.py` | 导出朋友圈时间线 HTML |
-| `export_moments_full.py` | 导出含月份图库的完整朋友圈时间线 |
+| `export_moments_full.py` | 导出含月份图库的完整朋友圈时间线（支持按人分文件、本地图片回退） |
 | `latency_test.py` | 延迟测量诊断工具 |
 
 ## 技术细节
